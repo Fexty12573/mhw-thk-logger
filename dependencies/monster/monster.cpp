@@ -1,9 +1,8 @@
 
 #include "monster.h"
-#include "Memory.hpp"
-#include "game_functions.h"
+#include "../utility/Memory.hpp"
+#include "../utility/game_functions.h"
 
-#include <MinHook.h>
 #include <string>
 
 namespace mh {
