@@ -117,19 +117,9 @@ void show_breakpoint()
 	MH::Chat::DisplayMessage(msg);
 	for (const auto& [mon_id, bps] : g_MonsterBreakpoints) {
 		std::string name;
-		if (mon_id != -1) name = mh::Monster::Names.at((mh::Monster::ID)g_MonsterFilter);
+		if (mon_id != -1) name = mh::Monster::Names.at((mh::Monster::ID)mon_id);
 		else name = "Global";
 		for (auto f : bps) {
-			auto name = mh::Monster::Names.at((mh::Monster::ID)g_MonsterFilter);
-			auto msg = fmt::format("{} Breakpoint: THK{:02} Node {} Segment {}", name, std::get<0>(f), std::get<1>(f), std::get<2>(f));
-			MH::Chat::DisplayMessage(msg);
-			LOG(INFO) << msg;
-		}
-	}
-
-
-	if (g_MonsterFilter != -1 && g_MonsterBreakpoints.contains(g_MonsterFilter)) {
-		for (auto f : g_MonsterBreakpoints[g_MonsterFilter]) {
 			auto name = mh::Monster::Names.at((mh::Monster::ID)g_MonsterFilter);
 			auto msg = fmt::format("{} Breakpoint: THK{:02} Node {} Segment {}", name, std::get<0>(f), std::get<1>(f), std::get<2>(f));
 			MH::Chat::DisplayMessage(msg);
