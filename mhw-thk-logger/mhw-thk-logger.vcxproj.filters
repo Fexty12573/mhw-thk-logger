@@ -30,6 +30,9 @@
     <ClInclude Include="symbols.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="file_dialog.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

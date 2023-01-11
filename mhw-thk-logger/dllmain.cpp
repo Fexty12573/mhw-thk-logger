@@ -26,11 +26,13 @@ using namespace loader;
 CreateHook(MH::Monster::ctor, ctor, void*, void* thisptr, mh::Monster::ID id, u32 sub)
 {
 	g_Monsters[thisptr] = -1;
+	g_ThkMonsters[thisptr] = -1;
 	return original(thisptr, id, sub);
 }
 CreateHook(MH::Monster::dtor, dtor, void, void* thisptr)
 {
 	g_Monsters.erase(thisptr);
+	g_ThkMonsters.erase(thisptr);
 	return original(thisptr);
 }
 
@@ -90,8 +92,9 @@ CreateHook(MH::Monster::ProcessTHKSegment, ProcessTHKSegment, int, cThinkMgr* th
 				}
 				return original(thisptr, out, segment);
 			}
-
-			symbol_check((int) mon.m_id, (int) thkId, (int) nodeIndex, (int) segmentIndex, m);
+			//LOG(INFO) << fmt::format("{} {} {}", (int) mon.m_id, thkId, nodeIndex);
+			symbol_check((int) mon.m_id, (int) thkId, (int) nodeIndex, (int) segmentIndex, m,
+								(int) g_MonsterIx, (int) g_ThkMonsters.at(m), (int)g_Monsters.at(m));
 			if (g_LogRegisters && g_LogSegments) {
 				void* cThinkEm = thisptr->GetcThinkEm();
 				symbol_check_registers(cThinkEm);
@@ -99,6 +102,9 @@ CreateHook(MH::Monster::ProcessTHKSegment, ProcessTHKSegment, int, cThinkMgr* th
 			g_Monsters[m] = nodeIndex;
 			g_ThkMonsters[m] = thkId;
 			g_MonsterIx = (int) mon.m_id;
+			//LOG(INFO) << fmt::format("{} {} {}", (int) mon.m_id ,thkId, nodeIndex);
+			//LOG(INFO) << "";
+
 			//if (g_Pause) {
 			//	mon.at<byte>(0x14) &= 0xFE;
 			//}
@@ -150,7 +156,7 @@ void segment_filter(std::wstring s)
 void register_filter(std::wstring s)
 {
 	if (s.size() <= 15) {
-		g_LogSegments = !g_LogRegisters;
+		g_LogRegisters = !g_LogRegisters;
 		if (g_LogSegments)MH::Chat::DisplayMessage("Enabled Logging Registers");
 		else MH::Chat::DisplayMessage("Disabled Logging Registers");
 	}

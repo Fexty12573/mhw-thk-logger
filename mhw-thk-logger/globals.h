@@ -3,10 +3,10 @@
 typedef signed int s32;
 typedef unsigned int u32;
 
-static s32 g_MonsterFilter = -1;
-static bool g_LogSegments = true;
-static bool g_LogRegisters = true;
-static bool g_PauseOnCrash = true;
-static std::map<void*, s32> g_Monsters;
-static std::map<void*, s32> g_ThkMonsters;
-static int g_MonsterIx = -1;
+inline s32 g_MonsterFilter = -1;
+inline bool g_LogSegments = true;
+inline bool g_LogRegisters = false;
+inline bool g_PauseOnCrash = true;
+inline std::map<void*, s32> g_Monsters;
+inline std::map<void*, s32> g_ThkMonsters;
+inline int g_MonsterIx = -1;

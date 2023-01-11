@@ -162,10 +162,11 @@
       <AdditionalDependencies>loader.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(targetdir)$(targetname).dll "C:\Program Files\Steam\steamapps\common\Monster Hunter World\nativePC\plugins"</Command>
+      <Command>copy "$(targetdir)$(targetname).dll" "C:\Program Files (x86)\Steam\steamapps\common\Monster Hunter World\ICE\ntPC\plugins"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="file_dialog.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="breakpoints.h" />
     <ClInclude Include="globals.h" />
