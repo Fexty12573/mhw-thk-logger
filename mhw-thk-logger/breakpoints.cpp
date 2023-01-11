@@ -115,13 +115,19 @@ void show_breakpoint()
 {
 	auto msg = fmt::format("Listing Breakpoints:");
 	MH::Chat::DisplayMessage(msg);
-	if (g_MonsterBreakpoints.contains(-1)) {
-		for (auto f : g_MonsterBreakpoints[-1]) {
-			auto msg = fmt::format("Global Breakpoint: THK{:02} Node {} Segment {}", std::get<0>(f), std::get<1>(f), std::get<2>(f));
+	for (const auto& [mon_id, bps] : g_MonsterBreakpoints) {
+		std::string name;
+		if (mon_id != -1) name = mh::Monster::Names.at((mh::Monster::ID)g_MonsterFilter);
+		else name = "Global";
+		for (auto f : bps) {
+			auto name = mh::Monster::Names.at((mh::Monster::ID)g_MonsterFilter);
+			auto msg = fmt::format("{} Breakpoint: THK{:02} Node {} Segment {}", name, std::get<0>(f), std::get<1>(f), std::get<2>(f));
 			MH::Chat::DisplayMessage(msg);
 			LOG(INFO) << msg;
 		}
 	}
+
+
 	if (g_MonsterFilter != -1 && g_MonsterBreakpoints.contains(g_MonsterFilter)) {
 		for (auto f : g_MonsterBreakpoints[g_MonsterFilter]) {
 			auto name = mh::Monster::Names.at((mh::Monster::ID)g_MonsterFilter);
@@ -158,11 +164,9 @@ void check_breakpoints(int mon_id, int thk_ix, int node_ix, int segment_ix){
 		std::set<bp_triplet> bps = g_MonsterBreakpoints[mon_id];
 		bp_triplet t = std::make_tuple(thk_ix, node_ix, segment_ix);
 		if (bps.contains(t)) {
-
 			auto msg = fmt::format("{} Breakpoint Triggered at THK{:02} Node {} Segment {}", monster_name, thk_ix, node_ix, segment_ix);
 			MH::Chat::DisplayMessage(msg);
 			LOG(INFO) << msg;
-
 			pause();
 			return;
 		}
@@ -172,11 +176,9 @@ void check_breakpoints(int mon_id, int thk_ix, int node_ix, int segment_ix){
 		std::set<bp_triplet> bps = g_MonsterBreakpoints[mon_id];
 		bp_triplet t = std::make_tuple(thk_ix, node_ix, segment_ix);
 		if (bps.contains(t)) {
-
 			auto msg = fmt::format("Global Breakpoint Triggered by {} at THK{:02} Node {} Segment {}", monster_name, thk_ix, node_ix, segment_ix);
 			MH::Chat::DisplayMessage(msg);
 			LOG(INFO) << msg;
-
 			pause();
 			return;
 		}
