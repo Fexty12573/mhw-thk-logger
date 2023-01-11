@@ -21,6 +21,18 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="breakpoints.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="symbols.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file_dialog.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -30,6 +42,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\dependencies\monster\monster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="breakpoints.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="symbols.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
