@@ -10,6 +10,10 @@ struct cThinkMgr {
 	{
 		return at<cThinkMgr*>(0x538)->at<void*>(0x8);
 	}
+	void* GetcThinkEm()
+	{
+		return at<cThinkMgr*>(0x538);
+	}
 	void* GetTHKList()
 	{
 		return at<rThinkTableList*>(0x130);

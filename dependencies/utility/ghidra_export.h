@@ -1,4 +1,5 @@
 #pragma once
+typedef unsigned int u32;
 typedef unsigned char undefined;
 typedef unsigned char undefined1;
 typedef unsigned short undefined2;
@@ -90,6 +91,7 @@ namespace MH {
             inline undefined8(*CallBuild)() = (undefined8(*)())0x1411c0c30;
         }
         inline undefined8(*BuildShowGameMessage)() = (undefined8(*)())0x1419b54d0;
+        inline void DisplayMessage(const std::string& msg){MH::Chat::ShowGameMessage(*MH::Chat::MainPtr, msg.c_str(), -1, -1, false);}
     }
     namespace Damage {
         inline bool(*ApplySoftenBuildup)(longlong, longlong, float) = (bool(*)(longlong, longlong, float))0x1402c84d0;

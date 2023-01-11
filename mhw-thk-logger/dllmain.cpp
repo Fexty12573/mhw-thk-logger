@@ -3,6 +3,8 @@
 #include <map>
 #include <cwctype>
 #include <algorithm>
+#include <locale>
+#include <codecvt>
 
 #include <utility/util.h>
 #include <utility/game_functions.h>
@@ -14,16 +16,12 @@
 #include <dti/rThinkTable.h>
 #include <fmt/format.h>
 
-static s32 g_MonsterFilter = -1;
-static bool g_LogSegments = false;
-static std::map<void*, s32> g_Monsters;
-
-void DisplayMessage(const std::string& msg)
-{
-	MH::Chat::ShowGameMessage(*MH::Chat::MainPtr, msg.c_str(), -1, -1, false);
-}
+#include <breakpoints.h>
+#include <globals.h>
+#include <symbols.h>
 
 using namespace loader;
+
 
 CreateHook(MH::Monster::ctor, ctor, void*, void* thisptr, mh::Monster::ID id, u32 sub)
 {
@@ -34,6 +32,22 @@ CreateHook(MH::Monster::dtor, dtor, void, void* thisptr)
 {
 	g_Monsters.erase(thisptr);
 	return original(thisptr);
+}
+
+std::tuple<int, int> get_indices(THK::Segment *segment, THK *thk) {
+	for (u32 i = 0; i < thk->mHeader.mNodeCount; i++)
+	{
+		const auto& info = thk->mHeader.mNodeInfoList[i];
+
+		for (u32 j = 0; j < info.mSegmentCount; j++)
+		{
+			if (&info.mNode[j] == segment)
+			{
+				return { i,j };
+			}
+		}
+	}
+	return { -1,-1 };
 }
 
 CreateHook(MH::Monster::ProcessTHKSegment, ProcessTHKSegment, int, cThinkMgr* thisptr, int* out, THK::Segment* segment)
@@ -59,8 +73,6 @@ CreateHook(MH::Monster::ProcessTHKSegment, ProcessTHKSegment, int, cThinkMgr* th
 			u32 emId = 0, subId = 0, thkId = 0;
 			sscanf_s(path, R"(em\em%03u\%02u\data\em%03u_%02u)", &emId, &subId, &emId, &thkId);
 
-			s32 nodeIndex = -1;
-			s32 segmentIndex = -1;
 			if (segment >= veryFirst && segment <= veryLast) // is THK55
 			{
 				thkId = 55;
@@ -68,51 +80,109 @@ CreateHook(MH::Monster::ProcessTHKSegment, ProcessTHKSegment, int, cThinkMgr* th
 			}
 
 			const auto thk = thinktable->mTHK;
-			for (u32 i = 0; i < thk->mHeader.mNodeCount; i++)
-			{
-				const auto& info = thk->mHeader.mNodeInfoList[i];
+			auto [nodeIndex, segmentIndex] = get_indices(segment,thk);
 
-				for (u32 j = 0; j < info.mSegmentCount; j++)
-				{
-					if (&info.mNode[j] == segment)
-					{
-						nodeIndex = i;
-						segmentIndex = j;
-						goto endLoop; // very bruh I know but it's the cleanest way
-					}
-				}
-			}
-
-		endLoop:
 			if (nodeIndex == -1)
 			{
 				LOG(INFO) << fmt::format("Failed to get node index {}, THK({})", static_cast<void*>(segment), static_cast<void*>(thinktable));
+				if (g_PauseOnCrash) {
+					pause();//mon.at<byte>(0x14) &= 0xFE;
+				}
 				return original(thisptr, out, segment);
 			}
 
-			if (g_LogSegments)
-			{
-				LOG(INFO) << fmt::format("[{} at {}] THK{:02}, Node Index: {}, Segment: {}",
-					mh::Monster::Names.at(mon.m_id), m,
-					thkId, nodeIndex, segmentIndex);
-
-				g_Monsters[m] = nodeIndex;
+			symbol_check((int) mon.m_id, (int) thkId, (int) nodeIndex, (int) segmentIndex, m);
+			if (g_LogRegisters && g_LogSegments) {
+				void* cThinkEm = thisptr->GetcThinkEm();
+				symbol_check_registers(cThinkEm);
 			}
-			else
-			{
-				if (g_Monsters.at(m) != nodeIndex)
-				{
-					LOG(INFO) << fmt::format("[{} at {}] THK{:02}, Node Index: {}",
-						mh::Monster::Names.at(mon.m_id), m,
-						thkId, nodeIndex);
-
-					g_Monsters[m] = nodeIndex;
-				}
-			}
+			g_Monsters[m] = nodeIndex;
+			g_ThkMonsters[m] = thkId;
+			g_MonsterIx = (int) mon.m_id;
+			//if (g_Pause) {
+			//	mon.at<byte>(0x14) &= 0xFE;
+			//}
+			//else {
+			//	mon.at<byte>(0x14) |= 1;
+			//}
 		}
 	}
 
 	return original(thisptr, out, segment);
+}
+
+void monster_filter(std::wstring s) 
+{
+	swscanf_s(s.data(), L"/thk filter %d", &g_MonsterFilter);
+	if (g_MonsterFilter == -1)
+	{
+		auto msg = "Disabled Monster Filter";
+		MH::Chat::DisplayMessage(msg);
+		LOG(INFO) << msg;
+	}
+	else
+	{
+		const auto msg = fmt::format("Monster Filter set to {0}", mh::Monster::Names.at(static_cast<mh::Monster::ID>(g_MonsterFilter)));
+		MH::Chat::DisplayMessage(msg);
+		LOG(INFO) << msg;
+	}
+}
+
+void segment_filter(std::wstring s)
+{
+	if (s.size() <= 14) {
+		g_LogSegments = !g_LogSegments;
+		if (g_LogSegments)MH::Chat::DisplayMessage("Enabled Logging Segments");
+		else MH::Chat::DisplayMessage("Disabled Logging Segments");
+	}
+	else if (s.substr(14) == L"true")
+	{
+		g_LogSegments = true;
+		MH::Chat::DisplayMessage("Enabled Logging Segments");
+	}
+	else if (s.substr(14) == L"false")
+	{
+		g_LogSegments = false;
+		MH::Chat::DisplayMessage("Disabled Logging Segments");
+	}
+}
+
+void register_filter(std::wstring s)
+{
+	if (s.size() <= 15) {
+		g_LogSegments = !g_LogRegisters;
+		if (g_LogSegments)MH::Chat::DisplayMessage("Enabled Logging Registers");
+		else MH::Chat::DisplayMessage("Disabled Logging Registers");
+	}
+	else if (s.substr(15) == L"true")
+	{
+		g_LogRegisters = true;
+		MH::Chat::DisplayMessage("Enabled Logging Registers");
+	}
+	else if (s.substr(15) == L"false")
+	{
+		g_LogRegisters = false;
+		MH::Chat::DisplayMessage("Disabled Logging Registers");
+	}
+}
+
+void pause_filter(std::wstring s)
+{
+	if (s.size() <= 17) {
+		g_PauseOnCrash = !g_PauseOnCrash;
+		if (g_LogSegments)MH::Chat::DisplayMessage("Enabled Pause On Crash");
+		else MH::Chat::DisplayMessage("Disabled Pause On Crash");
+	}
+	else if (s.substr(17) == L"true")
+	{
+		g_PauseOnCrash = true;
+		MH::Chat::DisplayMessage("Enabled Pause On Crash");
+	}
+	else if (s.substr(17) == L"false")
+	{
+		g_PauseOnCrash = false;
+		MH::Chat::DisplayMessage("Disabled Pause On Crash");
+	}
 }
 
 CreateHook(MH::sMhInputText::Dispatch, Dispatch, void, const wchar_t* str)
@@ -122,34 +192,36 @@ CreateHook(MH::sMhInputText::Dispatch, Dispatch, void, const wchar_t* str)
 	std::transform(s.begin(), s.end(), s.begin(), [](unsigned short c) { return std::towlower(c); });
 	if (s.starts_with(L"/thk filter"))
 	{
-		swscanf_s(s.data(), L"/thk filter %d", &g_MonsterFilter);
-		if (g_MonsterFilter == -1)
-		{
-			auto msg = "Disabled Monster Filter";
-			DisplayMessage(msg);
-			LOG(INFO) << msg;
-		}
-		else
-		{
-			const auto msg = fmt::format("Monster Filter set to {0}", mh::Monster::Names.at(static_cast<mh::Monster::ID>(g_MonsterFilter)));
-			DisplayMessage(msg);
-			LOG(INFO) << msg;
-		}
+		monster_filter(s);
 	}
 	else if (s.starts_with(L"/thk segments"))
 	{
-		if (s.substr(14) == L"true")
-		{
-			g_LogSegments = true;
-			DisplayMessage("Enabled Logging Segments");
-		}
-		else if (s.substr(14) == L"false")
-		{
-			g_LogSegments = false;
-			DisplayMessage("Disabled Logging Segments");
-		}
+		segment_filter(s);
 	}
-
+	else if (s.starts_with(L"/thk registers"))
+	{
+		register_filter(s);
+	}
+	else if (s.starts_with(L"/thk pause"))
+	{
+		pause();
+	}
+	else if (s.starts_with(L"/thk unpause"))
+	{
+		unpause();
+	}
+	else if (s.starts_with(L"/thk crash_pause"))
+	{
+		pause_filter(s);
+	}
+	else if (s.starts_with(L"/thk bp"))
+	{
+		manage_breakpoint(s);
+	}
+	else if (s.starts_with(L"/thk symbols"))
+	{
+		load_symbols();
+	}
 	return original(str);
 }
 
