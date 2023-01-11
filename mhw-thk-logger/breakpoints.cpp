@@ -75,11 +75,6 @@ void add_breakpoint(bp_triplet t)
 	g_MonsterBreakpoints[g_MonsterFilter] = target;
 	auto msg = fmt::format("Created {} Breakpoint: THK{:02} Node {} Segment {}", monster, std::get<0>(t), std::get<1>(t), std::get<2>(t));
 	MH::Chat::DisplayMessage(msg);
-	LOG(INFO) << std::get<0>(t) << "," << std::get<1>(t) << "," << std::get<2>(t);
-	for (auto f : target)
-		LOG(INFO) << std::get<0>(f) << "," << std::get<1>(f) << "," << std::get<2>(f);
-	for (auto f : g_MonsterBreakpoints[g_MonsterFilter])
-		LOG(INFO) << std::get<0>(f) << "," << std::get<1>(f) << "," << std::get<2>(f);
 	LOG(INFO) << msg;
 }
 
@@ -147,7 +142,6 @@ void manage_breakpoint(std::wstring s) {
 }
 
 void check_breakpoints(int mon_id, int thk_ix, int node_ix, int segment_ix){
-	LOG(INFO) << mon_id << "," << thk_ix << "," << node_ix << "," << segment_ix;
 	std::string monster_name = mh::Monster::Names.at((mh::Monster::ID) mon_id);
 	if (g_MonsterBreakpoints.contains(mon_id)) {
 		std::set<bp_triplet> bps = g_MonsterBreakpoints[mon_id];
