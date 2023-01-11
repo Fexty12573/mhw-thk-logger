@@ -26,8 +26,10 @@ Unause global monster timer. Freezing them.
  * /thk crash_pause [true|false]
 Pause if an apparently invalid THK node is next in execution.
 
- * /thk bp [THK|THK Node|THK Node Segment]
-Sets a breakpoint at a given segment. If the monster filter is active, the breakpoint is exclussive to the monster in question. If no value is passed it sets the breakpoint in THK00, Node 0 and Segment 0. Succesive arguments set THK, Node and Segment indices.
+ * /thk bp add|del|lst [THK|THK Node|THK Node Segment]
+
+Sets/Removes a breakpoint at a given segment. If the monster filter is active, the breakpoint is exclussive to the monster in question. If no value is passed it sets the breakpoint in THK00, Node 0 and Segment 0. Succesive arguments set THK, Node and Segment indices. lst lists all of the breakpoints already set.
+
 
  * /thk symbols
 Import a symbols file. It opens a file dialog to provide a Leviathon Symbols file. To make Leviathon export a symbols file for your project pass the `-symbols` flag to the compiler.

@@ -9,8 +9,8 @@
 #include <dti/rThinkTable.h>
 
 using bp_triplet = std::tuple<s32, s32, s32>;
-static bool g_Pause = false;
-static std::map<s32, std::set<bp_triplet>> g_MonsterBreakpoints;
+inline bool g_Pause = false;
+inline std::map<s32, std::set<bp_triplet>> g_MonsterBreakpoints;
 
 
 inline void setTime(float scale)
@@ -39,3 +39,4 @@ void missing_breakpoint(const char* monster_name, bp_triplet f);
 void del_breakpoint(bp_triplet t);
 void show_breakpoint();
 void manage_breakpoint(std::wstring s);
+void check_breakpoints(int, int, int, int);

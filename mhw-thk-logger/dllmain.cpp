@@ -92,6 +92,9 @@ CreateHook(MH::Monster::ProcessTHKSegment, ProcessTHKSegment, int, cThinkMgr* th
 				}
 				return original(thisptr, out, segment);
 			}
+
+			check_breakpoints((int)mon.m_id, (int)thkId, (int)nodeIndex, (int)segmentIndex);
+
 			//LOG(INFO) << fmt::format("{} {} {}", (int) mon.m_id, thkId, nodeIndex);
 			symbol_check((int) mon.m_id, (int) thkId, (int) nodeIndex, (int) segmentIndex, m,
 								(int) g_MonsterIx, (int) g_ThkMonsters.at(m), (int)g_Monsters.at(m));

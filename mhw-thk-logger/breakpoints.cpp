@@ -44,15 +44,14 @@ std::vector<std::string> python_split(std::wstring wstr, const char c) {
 }
 
 bp_triplet split_breakpoint_arguments(std::wstring s) {
-	auto offset = std::string("/thk bp ").size();
 	auto data = python_split(s, ' ');
 	auto len = data.size();
 	int thk = 0;
 	int node = 0;
 	int segment = 0;
-	if (len >= 3) thk = stoi(data[3]);
-	if (len >= 4) node = stoi(data[4]);
-	if (len >= 5) segment = stoi(data[5]);
+	if (len > 3) thk = std::stoi(data[3]);
+	if (len > 4) node = std::stoi(data[4]);
+	if (len > 5) segment = std::stoi(data[5]);
 	bp_triplet result = std::make_tuple(thk, node, segment);
 	return result;
 }
@@ -65,15 +64,22 @@ void add_breakpoint(bp_triplet t)
 		monster = mh::Monster::Names.at((mh::Monster::ID)g_MonsterFilter);
 	}
 	if (!g_MonsterBreakpoints.contains(g_MonsterFilter)) {
+		LOG(INFO) << "Emplacing Element";
+		target = std::set<bp_triplet>();
 		g_MonsterBreakpoints.emplace(g_MonsterFilter, target);
 	}
 	else {
 		target = g_MonsterBreakpoints[g_MonsterFilter];
 	}
-	target = g_MonsterBreakpoints[g_MonsterFilter];
 	target.insert(t);
+	g_MonsterBreakpoints[g_MonsterFilter] = target;
 	auto msg = fmt::format("Created {} Breakpoint: THK{:02} Node {} Segment {}", monster, std::get<0>(t), std::get<1>(t), std::get<2>(t));
 	MH::Chat::DisplayMessage(msg);
+	LOG(INFO) << std::get<0>(t) << "," << std::get<1>(t) << "," << std::get<2>(t);
+	for (auto f : target)
+		LOG(INFO) << std::get<0>(f) << "," << std::get<1>(f) << "," << std::get<2>(f);
+	for (auto f : g_MonsterBreakpoints[g_MonsterFilter])
+		LOG(INFO) << std::get<0>(f) << "," << std::get<1>(f) << "," << std::get<2>(f);
 	LOG(INFO) << msg;
 }
 
@@ -99,6 +105,7 @@ void del_breakpoint(bp_triplet t)
 		return;
 	}
 	target.erase(t);
+	g_MonsterBreakpoints[g_MonsterFilter] = target;
 	auto msg = fmt::format("Deleted {} Breakpoint: THK{:02} Node {} Segment {}", monster, std::get<0>(t), std::get<1>(t), std::get<2>(t));
 	MH::Chat::DisplayMessage(msg);
 	LOG(INFO) << msg;
@@ -106,6 +113,8 @@ void del_breakpoint(bp_triplet t)
 
 void show_breakpoint()
 {
+	auto msg = fmt::format("Listing Breakpoints:");
+	MH::Chat::DisplayMessage(msg);
 	if (g_MonsterBreakpoints.contains(-1)) {
 		for (auto f : g_MonsterBreakpoints[-1]) {
 			auto msg = fmt::format("Global Breakpoint: THK{:02} Node {} Segment {}", std::get<0>(f), std::get<1>(f), std::get<2>(f));
@@ -138,6 +147,38 @@ void manage_breakpoint(std::wstring s) {
 		else if (s.starts_with(L"/thk bp del"))
 		{
 			del_breakpoint(indices);
+		}
+	}
+}
+
+void check_breakpoints(int mon_id, int thk_ix, int node_ix, int segment_ix){
+	LOG(INFO) << mon_id << "," << thk_ix << "," << node_ix << "," << segment_ix;
+	std::string monster_name = mh::Monster::Names.at((mh::Monster::ID) mon_id);
+	if (g_MonsterBreakpoints.contains(mon_id)) {
+		std::set<bp_triplet> bps = g_MonsterBreakpoints[mon_id];
+		bp_triplet t = std::make_tuple(thk_ix, node_ix, segment_ix);
+		if (bps.contains(t)) {
+
+			auto msg = fmt::format("{} Breakpoint Triggered at THK{:02} Node {} Segment {}", monster_name, thk_ix, node_ix, segment_ix);
+			MH::Chat::DisplayMessage(msg);
+			LOG(INFO) << msg;
+
+			pause();
+			return;
+		}
+	}
+	mon_id = -1;
+	if (g_MonsterBreakpoints.contains(-1)) {
+		std::set<bp_triplet> bps = g_MonsterBreakpoints[mon_id];
+		bp_triplet t = std::make_tuple(thk_ix, node_ix, segment_ix);
+		if (bps.contains(t)) {
+
+			auto msg = fmt::format("Global Breakpoint Triggered by {} at THK{:02} Node {} Segment {}", monster_name, thk_ix, node_ix, segment_ix);
+			MH::Chat::DisplayMessage(msg);
+			LOG(INFO) << msg;
+
+			pause();
+			return;
 		}
 	}
 }
