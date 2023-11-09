@@ -1,5 +1,4 @@
 #pragma once
-typedef unsigned int u32;
 typedef unsigned char undefined;
 typedef unsigned char undefined1;
 typedef unsigned short undefined2;
@@ -10,6 +9,7 @@ typedef unsigned long long ulonglong;
 typedef long long longlong;
 typedef unsigned int uint;
 typedef unsigned short ushort;
+typedef unsigned int u32;
 
 namespace MH {
     namespace Quest {
@@ -42,13 +42,13 @@ namespace MH {
         inline bool(*CheckFlag)(longlong, uint) = (bool(*)(longlong, uint))0x14136bdf0;
     }
     namespace Monster {
-        inline void(*dtor)(void*) = (void(*)(void*))0x141cbff80;
+        inline void(*dtor)(void*) = (void(*)(void*))0x141ca3a10; // 15.20
         inline void* vptr = (void*)0x1434a7a20;
         namespace DamageBehavior {
-            inline undefined8(*NextAction)() = (undefined8(*)())0x1413a6bf0;
+            inline undefined8(*NextAction)() = (undefined8(*)())0x1413966e0; // 15.20
         }
-        inline bool(*LaunchAction)(undefined*, uint) = (bool(*)(undefined*, uint))0x141ce0a50;
-        inline void* (*ctor)(void*, u32, u32) = (void* (*)(void*, u32, u32))0x141cbd6a0;
+        inline bool(*LaunchAction)(undefined*, uint) = (bool(*)(undefined*, uint))0x141cc4590; // 15.20
+        inline void* (*ctor)(void*, u32, u32) = (void* (*)(void*, u32, u32))0x141ca1130; // 15.20
         namespace SoftenTimers {
             inline undefined8(*WoundPartLocal)() = (undefined8(*)())0x140aff490;
         }
@@ -91,7 +91,11 @@ namespace MH {
             inline undefined8(*CallBuild)() = (undefined8(*)())0x1411c0c30;
         }
         inline undefined8(*BuildShowGameMessage)() = (undefined8(*)())0x1419b54d0;
-        inline void DisplayMessage(const std::string& msg){MH::Chat::ShowGameMessage(*MH::Chat::MainPtr, msg.c_str(), -1, -1, false);}
+
+        inline void DisplayMessage(std::string_view msg, bool purple = true) {
+            auto* main = *MainPtr;
+            ShowGameMessage(main, msg.data(), 0.0f, 0, purple);
+        }
     }
     namespace Damage {
         inline bool(*ApplySoftenBuildup)(longlong, longlong, float) = (bool(*)(longlong, longlong, float))0x1402c84d0;

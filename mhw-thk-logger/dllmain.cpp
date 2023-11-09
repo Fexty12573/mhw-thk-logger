@@ -22,7 +22,6 @@
 
 using namespace loader;
 
-
 CreateHook(MH::Monster::ctor, ctor, void*, void* thisptr, mh::Monster::ID id, u32 sub)
 {
 	g_Monsters[thisptr] = -1;
